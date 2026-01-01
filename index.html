@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Budget">
+  <title>Budget Tracker</title>
+  <link rel="manifest" href="#" id="manifest-placeholder">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #fafaf9;
+      overflow-x: hidden;
+    }
+    
+    .container {
+      min-height: 100vh;
+      padding: 1rem;
+      padding-bottom: 5rem;
+    }
+    
+    .max-w {
+      max-width: 28rem;
+      margin: 0 auto;
+      position: relative;
+    }
+    
+    .currency-btn {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      background: white;
+      border: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      transition: transform 0.1s, box-shadow 0.2s;
+    }
+    
+    .currency-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .currency-btn:hover {
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .dialog-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+    
+    .dialog {
+      background: white;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 20px 25px rgba(0,0,0,0.15);
+      max-width: 24rem;
+      margin: 0 1rem;
+    }
+    
+    .dialog-content {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .dialog-label {
+      color: #374151;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    
+    .dialog-input {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      background: #f9fafb;
+      border: none;
+      outline: none;
+      text-align: center;
+      font-size: 1rem;
+    }
+    
+    .btn-check {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 0.5rem;
+      background: #dcfce7;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    
+    .btn-check:active {
+      transform: scale(0.95);
+    }
+    
+    .back-btn {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      background: white;
+      border: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      margin-bottom: 1rem;
+    }
+    
+    .back-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .category-header {
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .category-emoji {
+      font-size: 1.875rem;
+      margin-right: 0.75rem;
+    }
+    
+    .category-name {
+      font-size: 1.25rem;
+      color: #374151;
+      font-weight: 500;
+    }
+    
+    .total-section {
+      text-align: center;
+      margin-bottom: 2rem;
+      margin-top: 1rem;
+    }
+    
+    .total-label {
+      color: #6b7280;
+      font-size: 0.875rem;
+      margin-bottom: 0.25rem;
+    }
+    
+    .total-amount {
+      font-size: 2.25rem;
+      font-weight: 300;
+      color: #1f2937;
+    }
+    
+    .categories {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding-bottom: 1rem;
+    }
+    
+    .category-box {
+      border-radius: 1rem;
+      padding: 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: all 0.2s;
+    }
+    
+    .category-main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .category-left {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      cursor: pointer;
+    }
+    
+    .category-left:active {
+      opacity: 0.7;
+    }
+    
+    .category-emoji-small {
+      font-size: 1.5rem;
+      margin-right: 0.75rem;
+    }
+    
+    .category-title {
+      color: #374151;
+      font-weight: 500;
+    }
+    
+    .category-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .category-sum {
+      color: #4b5563;
+      font-weight: 500;
+    }
+    
+    .btn-plus {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      background: white;
+      border: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.1s;
+    }
+    
+    .btn-plus:hover {
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .btn-plus:active {
+      transform: scale(0.95);
+    }
+    
+    .add-input-container {
+      margin-top: 0.75rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .add-input {
+      flex: 1;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      border: none;
+      outline: none;
+      color: #374151;
+      font-size: 1rem;
+    }
+    
+    .btn-add {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 0.5rem;
+      background: white;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    
+    .btn-add:hover {
+      background: #f9fafb;
+    }
+    
+    .btn-add:active {
+      transform: scale(0.95);
+    }
+    
+    .items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding-bottom: 1rem;
+    }
+    
+    .item-card {
+      background: white;
+      border-radius: 0.75rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 1rem;
+    }
+    
+    .item-edit {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    
+    .item-edit-row {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .item-edit-input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      background: #f9fafb;
+      border: none;
+      outline: none;
+      font-size: 1.125rem;
+    }
+    
+    .item-edit-btn {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 0.5rem;
+      background: #dcfce7;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    
+    .item-edit-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .item-note-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      background: #f9fafb;
+      border: none;
+      outline: none;
+    }
+    
+    .item-display {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .item-info {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .item-amount {
+      font-size: 1.25rem;
+      font-weight: 500;
+      color: #1f2937;
+    }
+    
+    .item-note {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+    }
+    
+    .item-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .item-date {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+    
+    .item-btn {
+      background: none;
+      border: none;
+      color: #9ca3af;
+      cursor: pointer;
+      padding: 0.25rem;
+      display: flex;
+      align-items: center;
+    }
+    
+    .item-btn:hover {
+      color: #4b5563;
+    }
+    
+    .item-btn.delete:hover {
+      color: #ef4444;
+    }
+    
+    .item-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .empty-state {
+      text-align: center;
+      color: #9ca3af;
+      padding: 3rem 0;
+    }
+    
+    .month-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #fafaf9;
+      border-top: 1px solid #e5e7eb;
+      padding: 1rem;
+    }
+    
+    .month-nav-content {
+      max-width: 28rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .month-btn {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      background: white;
+      border: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.1s;
+    }
+    
+    .month-btn:hover {
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .month-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .month-text {
+      color: #374151;
+      font-weight: 500;
+    }
+    
+    .bg-orange-100 { background-color: #ffedd5; }
+    .bg-sky-100 { background-color: #e0f2fe; }
+    .bg-emerald-100 { background-color: #d1fae5; }
+    .bg-violet-100 { background-color: #ede9fe; }
+    .bg-rose-100 { background-color: #ffe4e6; }
+    
+    svg { width: 1.25rem; height: 1.25rem; }
+    .svg-lg { width: 1.5rem; height: 1.5rem; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <script>
+    // Simple icon components
+    const Icons = {
+      Plus: () => `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>`,
+      X: () => `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>`,
+      Edit2: () => `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>`,
+      Check: () => `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`,
+      ChevronLeft: () => `<svg class="svg-lg" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>`,
+      ChevronRight: () => `<svg class="svg-lg" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>`,
+      ArrowLeft: () => `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>`
+    };
+
+    class BudgetApp {
+      constructor() {
+        this.state = {
+          currentMonth: new Date(),
+          monthlyData: {},
+          viewingCategory: null,
+          addingTo: null,
+          newAmount: '',
+          editingItem: null,
+          editAmount: '',
+          editNote: '',
+          currencySymbol: '$',
+          showCurrencyDialog: false,
+          tempCurrency: '$'
+        };
+        
+        this.loadData();
+        this.render();
+      }
+
+      loadData() {
+        const saved = localStorage.getItem('budgetData');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            this.state.monthlyData = parsed.monthlyData || {};
+            this.state.currencySymbol = parsed.currencySymbol || '$';
+          } catch (e) {
+            console.error('Error loading data:', e);
+          }
+        }
+      }
+
+      saveData() {
+        const dataToSave = {
+          monthlyData: this.state.monthlyData,
+          currencySymbol: this.state.currencySymbol
+        };
+        localStorage.setItem('budgetData', JSON.stringify(dataToSave));
+      }
+
+      getMonthKey(date) {
+        return `${date.getFullYear()}-${date.getMonth()}`;
+      }
+
+      getCurrentMonthData() {
+        const key = this.getMonthKey(this.state.currentMonth);
+        return this.state.monthlyData[key] || {
+          food: { name: 'Food & Drink', emoji: '🍚', color: 'bg-orange-100', items: [] },
+          accommodation: { name: 'Accommodation', emoji: '🏡', color: 'bg-sky-100', items: [] },
+          transport: { name: 'Transport', emoji: '🚄', color: 'bg-emerald-100', items: [] },
+          essentials: { name: 'Daily Essentials', emoji: '💊', color: 'bg-violet-100', items: [] },
+          other: { name: 'Other', emoji: '🪇', color: 'bg-rose-100', items: [] }
+        };
+      }
+
+      formatCurrency(amount) {
+        return `${this.state.currencySymbol}${amount.toFixed(2)}`;
+      }
+
+      formatMonth(date) {
+        const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+        return `${months[date.getMonth()]} ${date.getFullYear()}`;
+      }
+
+      formatDate(dateStr) {
+        const d = new Date(dateStr);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+      }
+
+      addAmount(catKey) {
+        const amount = parseFloat(this.state.newAmount);
+        if (isNaN(amount) || amount <= 0) return;
+
+        const newItem = {
+          id: Date.now(),
+          amount,
+          date: new Date().toISOString(),
+          note: ''
+        };
+
+        const key = this.getMonthKey(this.state.currentMonth);
+        const currentData = this.getCurrentMonthData();
+
+        if (!this.state.monthlyData[key]) {
+          this.state.monthlyData[key] = currentData;
+        }
+
+        this.state.monthlyData[key][catKey].items.push(newItem);
+        this.state.newAmount = '';
+        this.state.addingTo = null;
+        
+        this.saveData();
+        this.render();
+      }
+
+      deleteItem(catKey, itemId) {
+        const key = this.getMonthKey(this.state.currentMonth);
+        const currentData = this.getCurrentMonthData();
+        
+        currentData[catKey].items = currentData[catKey].items.filter(item => item.id !== itemId);
+        this.state.monthlyData[key] = currentData;
+        
+        this.saveData();
+        this.render();
+      }
+
+      editItem(catKey, itemId) {
+        const amount = parseFloat(this.state.editAmount);
+        if (isNaN(amount) || amount <= 0) return;
+
+        const key = this.getMonthKey(this.state.currentMonth);
+        const currentData = this.getCurrentMonthData();
+
+        const item = currentData[catKey].items.find(i => i.id === itemId);
+        if (item) {
+          item.amount = amount;
+          item.note = this.state.editNote.slice(0, 30);
+        }
+
+        this.state.monthlyData[key] = currentData;
+        this.state.editingItem = null;
+        this.state.editAmount = '';
+        this.state.editNote = '';
+        
+        this.saveData();
+        this.render();
+      }
+
+      changeMonth(direction) {
+        const newDate = new Date(this.state.currentMonth);
+        newDate.setMonth(newDate.getMonth() + direction);
+        this.state.currentMonth = newDate;
+        this.state.viewingCategory = null;
+        this.state.addingTo = null;
+        this.state.editingItem = null;
+        this.render();
+      }
+
+      render() {
+        const categories = this.getCurrentMonthData();
+        const totalSpent = Object.values(categories).reduce((sum, cat) => {
+          return sum + cat.items.reduce((catSum, item) => catSum + item.amount, 0);
+        }, 0);
+
+        let html = '<div class="container"><div class="max-w">';
+
+        // Currency button
+        html += `
+          <button class="currency-btn" onclick="app.state.tempCurrency = app.state.currencySymbol; app.state.showCurrencyDialog = true; app.render();">
+            <span style="color: #374151; font-weight: 500;">${this.state.currencySymbol}</span>
+          </button>
+        `;
+
+        // Currency dialog
+        if (this.state.showCurrencyDialog) {
+          html += `
+            <div class="dialog-overlay">
+              <div class="dialog">
+                <div class="dialog-content">
+                  <span class="dialog-label">Currency symbol:</span>
+                  <input type="text" class="dialog-input" maxlength="3" value="${this.state.tempCurrency}" 
+                    oninput="app.state.tempCurrency = this.value.slice(0, 3)">
+                  <button class="btn-check" onclick="if(app.state.tempCurrency.trim()) { app.state.currencySymbol = app.state.tempCurrency.trim(); app.state.showCurrencyDialog = false; app.saveData(); app.render(); }">
+                    ${Icons.Check()}
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        if (this.state.viewingCategory) {
+          const cat = categories[this.state.viewingCategory];
+          
+          html += `
+            <div style="margin-bottom: 1.5rem;">
+              <button class="back-btn" onclick="app.state.viewingCategory = null; app.state.editingItem = null; app.render();">
+                ${Icons.ArrowLeft()}
+              </button>
+              <div class="category-header ${cat.color}">
+                <span class="category-emoji">${cat.emoji}</span>
+                <span class="category-name">${cat.name}</span>
+              </div>
+            </div>
+            <div class="items-list">
+          `;
+
+          if (cat.items.length === 0) {
+            html += '<div class="empty-state">No items yet</div>';
+          } else {
+            cat.items.forEach(item => {
+              html += '<div class="item-card">';
+              
+              if (this.state.editingItem === item.id) {
+                html += `
+                  <div class="item-edit">
+                    <div class="item-edit-row">
+                      <input type="number" step="0.01" class="item-edit-input" value="${this.state.editAmount}" 
+                        oninput="app.state.editAmount = this.value">
+                      <button class="item-edit-btn" onclick="app.editItem('${this.state.viewingCategory}', ${item.id})">
+                        ${Icons.Check()}
+                      </button>
+                    </div>
+                    <input type="text" placeholder="Add note (max 30 chars)" maxlength="30" class="item-note-input" 
+                      value="${this.state.editNote}" oninput="app.state.editNote = this.value">
+                  </div>
+                `;
+              } else {
+                html += `
+                  <div class="item-display">
+                    <div class="item-info">
+                      <div class="item-amount">${this.formatCurrency(item.amount)}</div>
+                      ${item.note ? `<div class="item-note">${item.note}</div>` : ''}
+                    </div>
+                    <div class="item-actions">
+                      <span class="item-date">${this.formatDate(item.date)}</span>
+                      <button class="item-btn" onclick="app.state.editingItem = ${item.id}; app.state.editAmount = '${item.amount}'; app.state.editNote = '${item.note}'; app.render();">
+                        ${Icons.Edit2()}
+                      </button>
+                      <button class="item-btn delete" onclick="if(confirm('Delete this item?')) app.deleteItem('${this.state.viewingCategory}', ${item.id})">
+                        ${Icons.X()}
+                      </button>
+                    </div>
+                  </div>
+                `;
+              }
+              
+              html += '</div>';
+            });
+          }
+
+          html += '</div>';
+        } else {
+          // Main page
+          html += `
+            <div class="total-section">
+              <div class="total-label">Total Spent</div>
+              <div class="total-amount">${this.formatCurrency(totalSpent)}</div>
+            </div>
+            <div class="categories">
+          `;
+
+          Object.entries(categories).forEach(([key, cat]) => {
+            const catSum = cat.items.reduce((sum, item) => sum + item.amount, 0);
+            
+            html += `
+              <div class="category-box ${cat.color}">
+                <div class="category-main">
+                  <div class="category-left" onclick="app.state.viewingCategory = '${key}'; app.render();">
+                    <span class="category-emoji-small">${cat.emoji}</span>
+                    <span class="category-title">${cat.name}</span>
+                  </div>
+                  <div class="category-right">
+                    ${cat.items.length > 0 ? `<span class="category-sum">${this.state.currencySymbol}${Math.round(catSum)}</span>` : ''}
+                    <button class="btn-plus" onclick="app.state.addingTo = app.state.addingTo === '${key}' ? null : '${key}'; app.render();">
+                      ${Icons.Plus()}
+                    </button>
+                  </div>
+                </div>
+            `;
+
+            if (this.state.addingTo === key) {
+              html += `
+                <div class="add-input-container">
+                  <input type="number" step="0.01" inputmode="decimal" placeholder="Amount" class="add-input" 
+                    value="${this.state.newAmount}" oninput="app.state.newAmount = this.value"
+                    onkeypress="if(event.key === 'Enter') app.addAmount('${key}')">
+                  <button class="btn-add" onclick="app.addAmount('${key}')">
+                    ${Icons.Check()}
+                  </button>
+                </div>
+              `;
+            }
+
+            html += '</div>';
+          });
+
+          html += '</div>';
+        }
+
+        // Month navigation
+        html += `
+          <div class="month-nav">
+            <div class="month-nav-content">
+              <button class="month-btn" onclick="app.changeMonth(-1)">
+                ${Icons.ChevronLeft()}
+              </button>
+              <div class="month-text">${this.formatMonth(this.state.currentMonth)}</div>
+              <button class="month-btn" onclick="app.changeMonth(1)">
+                ${Icons.ChevronRight()}
+              </button>
+            </div>
+          </div>
+        `;
+
+        html += '</div></div>';
+        document.getElementById('root').innerHTML = html;
+      }
+    }
+
+    // Initialize app
+    let app;
+    window.addEventListener('load', () => {
+      app = new BudgetApp();
+    });
+
+    // Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        const swCode = `
+          const CACHE_NAME = 'budget-tracker-v1';
+          self.addEventListener('install', (e) => { self.skipWaiting(); });
+          self.addEventListener('activate', (e) => { e.waitUntil(clients.claim()); });
+          self.addEventListener('fetch', (e) => {
+            e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+          });
+        `;
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(blob);
+        navigator.serviceWorker.register(swUrl);
+      });
+    }
+
+    // Manifest
+    const manifest = {
+      name: "Budget Tracker",
+      short_name: "Budget",
+      description: "Personal budget tracking app",
+      start_url: "./",
+      display: "standalone",
+      background_color: "#fafaf9",
+      theme_color: "#fafaf9",
+      icons: [{
+        src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23f97316' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='70' font-size='60' text-anchor='middle' fill
